@@ -1,0 +1,82 @@
+new;
+
+//  Load hotel booking data
+fname = "data/hotel_bookings.csv";
+
+
+/*
+** Perform import
+*/
+hotel_bookings = loadd(fname, "cat(hotel) + is_canceled + lead_time + arrival_date_year + cat(arrival_date_month) + arrival_date_week_number + arrival_date_day_of_month + stays_in_weekend_nights + stays_in_week_nights + adults + children + babies + cat(meal) + str(country) + cat(market_segment) + cat(distribution_channel) + is_repeated_guest + previous_cancellations + previous_bookings_not_canceled + cat(reserved_room_type) + cat(assigned_room_type) + booking_changes + cat(deposit_type) + agent + str(company) + days_in_waiting_list + cat(customer_type) + adr + required_car_parking_spaces + total_of_special_requests + cat(reservation_status) + date($reservation_status_date)");
+
+ 
+/*
+* Check for duplicate observations
+*/
+if isunique(hotel_bookings);
+    print "No duplicates.";
+else;
+    print "Data contains the following identical observations:";
+    getduplicates(hotel_bookings);
+    wait;
+endif;
+
+hotel_bookings_uniq = dropduplicates(hotel_bookings);
+
+/*
+** Generate new data variable
+** from current data
+*/
+// Get month string labels
+months = ntos(hotel_bookings_uniq[., "arrival_date_month"]);
+
+// Build date string from existing data
+arrival_date = months $+ "/" $+ ntos(hotel_bookings_uniq[., "arrival_date_day_of_month"]) 
+                      $+ "/" $+ ntos(hotel_bookings_uniq[., "arrival_date_year"]);
+                      
+// Create arrival_date variable
+arrival_date = dfname(asdate(arrival_date, "%B/%e/%Y", 1),  "arrival_date");
+
+// Concatenate with remaining data
+hotel_bookings_uniq = arrival_date~hotel_bookings_uniq;
+
+// Change date format 
+hotel_bookings_uniq = setColDateFormats(hotel_bookings_uniq, "%D", "arrival_date");
+
+/*
+** Check frequency of hotel type
+** in plot
+*/
+plotFreq(hotel_bookings_uniq, "hotel");
+
+/*
+** Check the frequency of bookings by 
+** by month --> DISCUSS THIS WITH TEAM
+*/
+hotel_bookings_uniq = setcollabels(move(hotel_bookings_uniq), 
+                                "January"$|"February"$|"March"$|"April"$|"May"$|"June"$|"July"$|"August"$|"September"$|"October"$|"November"$|"December", 
+                                 0|1|2|3|4|5|6|7|8|9|10|11, 
+                                 "arrival_date_month");
+                                 
+et = hsec();
+plotFreq(hotel_bookings_uniq, "arrival_date_month");
+plotAddVBar(2.5, 5.5);
+et = (hsec() - et)/100;
+et;
+
+/*
+** View box plot of
+** of price by neighborhood group 
+** by month
+*/
+ // SHOULDN'T THE LABELS ON THE X-AXIS BE STRINGS ? 
+et = hsec();
+    plotScatter(hotel_bookings_uniq, "adr ~ arrival_date_month + by(hotel)");
+et = (hsec() - et)/100;
+et;
+
+//dstatmt(hotel_bookings_uniq);
+et = hsec();
+    plotScatter(hotel_bookings_uniq[.,"arrival_date_month"], hotel_bookings_uniq[.,"adr"]);
+et = (hsec() - et)/100;
+et;

@@ -1,0 +1,68 @@
+/*
+** This file loads data from several sources
+** and merges the data into one dataframe
+** based on date and country
+*/
+new;
+//library tsmt;
+
+/*
+** OECD LEADING INDICATOR DATA
+** THIS IS MONTHLY DATA
+*/
+fname1 = "data/oecd-leading-cli.csv";
+cli_oecd = loadd(fname1, "cat(LOCATION) + date($TIME, '%Y-%m') + Value");
+cli_oecd = dfname(move(cli_oecd), "CCODE"$|"CLI", "LOCATION"$|"Value");
+
+// CHECK IF UNIQ
+if isunique(cli_oecd);
+    print "Data is unique";
+else;
+    getduplicates(cli_oecd);
+endif;
+
+// Drop regional and aggregate measure cli 
+cli_oecd = selif(cli_oecd, (cli_oecd[., "CCODE"] .$!= "G-7" .and cli_oecd[., "CCODE"] .$!= "EA19" .and cli_oecd[., "CCODE"] .$!= "OECD"));
+
+// Reorder variables and put time and ccode at front
+cli_oecd = order(cli_oecd, "TIME"$|"CCODE");
+
+// Sort data 
+cli_oecd = sortmc(cli_oecd, 2|1);
+
+/*
+** OECD GDP GROWTH DATA
+*/
+fname2 = "data/oecd-quarterly-gdp.csv";
+qgdp_oecd = loadd(fname2, "str(LOCATION) + cat(MEASURE) + cat(FREQUENCY) + date($TIME, '%Y-Q%q') + Value");
+qgdp_oecd = dfname(move(qgdp_oecd), "CCODE"$|"pct_gdp", "LOCATION"$|"Value");
+qgdp_oecd = selif(qgdp_oecd, (qgdp_oecd[., "MEASURE"] .$== "PC_CHGPY" .and qgdp_oecd[., "FREQUENCY"] .$== "Q"));
+qgdp_oecd = delcols(qgdp_oecd, "FREQUENCY");
+qgdp_oecd = delcols(qgdp_oecd, "MEASURE");
+
+// Drop regional and aggregate measure cli 
+qgdp_oecd = selif(qgdp_oecd, (qgdp_oecd[., "CCODE"] .$!= "EA19" .and qgdp_oecd[., "CCODE"] .$!= "EU27_2020" .and qgdp_oecd[., "CCODE"] .$!= "G-20" .and qgdp_oecd[., "CCODE"] .$!= "G-7" .and qgdp_oecd[., "CCODE"] .$!= "OECD" .and qgdp_oecd[., "CCODE"] .$!= "OECDE"));
+
+// CHECK IF UNIQUE
+if isunique(qgdp_oecd, "TIME"$|"CCODE" );
+    print "Data is unique";
+else;
+    getduplicates(qgdp_oecd, "TIME"$|"CCODE" );
+endif;
+
+
+// Change date format to match cli 
+// date format
+qgdp_oecd = asDate(qgdp_oecd, "%Y-%m", "TIME");
+
+// Reorder variables and put time and ccode at front
+qgdp_oecd = order(qgdp_oecd, "TIME"$|"CCODE");
+
+// Sort data
+qgdp_oecd = sortmc(qgdp_oecd, 2|1);
+
+
+// Join data
+reg_data = outerJoin(qgdp_oecd, "TIME"$|"CCODE", cli_oecd, "TIME"$|"CCODE");
+plotXY(reg_data, "pct_gdp ~ TIME + by(CCODE)");
+plotXY(reg_data, "pct_gdp ~ TIME + by(CCODE)");

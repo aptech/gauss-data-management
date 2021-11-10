@@ -1,0 +1,87 @@
+/**********************************************************************
+** SCRIPT ONE: Loading data and cleaning mis-entries
+**             This section should be done on command line with view of
+**             the data editor.
+***********************************************************************/
+new; 
+
+// Load the data file
+nba_ht_wt = loadd(getGAUSSHome $+ "examples/nba_ht_wt.xls", "str(Player) + cat(Pos) + Height + Weight + cat(School)");
+
+/*
+** Scroll through data with focus on the school variable
+*/
+
+// Highlight Saint Mary`s-CA on line 325
+nba_ht_wt[., "School"] = strreplace(nba_ht_wt[., "School"], "Saint Mary`s-CA", "St. Mary`s");
+
+// Highlight U-C-L-A entry on line 457
+nba_ht_wt[., "School"] = strreplace(nba_ht_wt[., "School"] , "U-C-L-A", "UCLA");
+
+// Generate frequency table of school
+frequency(nba_ht_wt, "school");
+
+/**********************************************************************
+**
+** SCRIPT TWO: Generating new variables from existing
+** string data and cleaning results
+***********************************************************************/
+new;
+
+// Load the data file
+nba_ht_wt = loadd(getGAUSSHome $+ "examples/nba_ht_wt.xls", "str(Player) + cat(Pos) + Height + Weight + cat(School)");
+
+// Generate name variables
+names = strsplit(nba_ht_wt[., "Player"], " ");
+
+// Change name of columns
+names = dfname(names, "First"$|"Last", 1|2);
+names = dftypes(names, "string"$|"string"$|"string"$|"string");
+
+// Scroll through names column and locate observations that
+// did not split as expected 
+// and manually replace names 
+names[37, "Last"] = "World-Peace"; 
+names[333, "Last"] = "De Colo"; 
+names[372, "Last"] = "Jones III"; 
+names[415, "Last"] = "Lucas III"; 
+names[501, "Last"] = "Mbah-a-Moute";
+
+// Delete extra columns
+names = delcols(names, 3|4);
+
+// Add to original dataframe
+nba_ht_wt = names~nba_ht_wt;
+
+// Change order
+nba_ht_wt = order(nba_ht_wt, "Last"$|"First"$|"School");
+
+/**********************************************************************
+** SCRIPT THREE: Quick boxplots of data with view of program line
+**               and view of graphics
+***********************************************************************/
+new;
+
+// Load the data file
+nba_ht_wt = loadd(getGAUSSHome $+ "examples/nba_ht_wt.xls", "str(Player) + cat(Pos) + Height + Weight");
+
+// Plot boxplot of height by position
+plotBox(nba_ht_wt, "Height~Pos");
+
+// Plot boxplot of height by position
+plotOpenWindow();
+plotBox(nba_ht_wt, "Weight~Pos");
+
+// Sort data and print
+// weight outliers
+// Sort data
+nba_weight_sorted = sortc(nba_ht_wt, 4);
+
+// Print outliers 
+nba_weight_sorted[rows(nba_ht_wt), .]
+nba_weight_sorted[1, .]
+
+/* 
+** It would be great to add annotations to the outliers here 
+** but I don't know how easy that is. 
+*/

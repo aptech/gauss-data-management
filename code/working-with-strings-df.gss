@@ -1,0 +1,8 @@
+new;
+AB_NYC_2019 = loadd("D:/development/GitHub/gauss-data-cleaning/data/AB_NYC_2019.csv", "id + str(name) + host_id + str(host_name) + cat(neighbourhood_group) + str(neighbourhood) + latitude + longitude + cat(room_type) + price + minimum_nights + number_of_reviews + date($last_review) + reviews_per_month + calculated_host_listings_count + availability_365");
+
+// Remove missings
+AB_NYC_2019 = packr(AB_NYC_2019);
+
+// Quick view of data
+dstatmt(ab_NYC_2019);
