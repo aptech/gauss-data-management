@@ -1,0 +1,9 @@
+/*
+** Perform import
+*/
+diamonds = loadd("D:/development/GitHub/gauss-data-management/data/diamonds.csv", "X1 + carat + cat(cut) + cat(color) + cat(clarity) + price");
+
+plotBox(diamonds, "price~cut");
+
+plotOpenWindow();
+plotBox(diamonds, "price~cut + by(clarity)");
