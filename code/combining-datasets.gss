@@ -22,7 +22,7 @@ else;
 endif;
 
 // Drop regional and aggregate measure cli 
-cli_oecd = selif(cli_oecd, (cli_oecd[., "CCODE"] .$!= "G-7" .and cli_oecd[., "CCODE"] .$!= "EA19" .and cli_oecd[., "CCODE"] .$!= "OECD"));
+cli_oecd = cli_oecd = delif(cli_oecd, rowContains(cli_oecd[., "CCODE"], "G-7" $| "EA19" $| "OECD"));
 
 // Reorder variables and put time and ccode at front
 cli_oecd = order(cli_oecd, "TIME"$|"CCODE");
