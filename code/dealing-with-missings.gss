@@ -1,0 +1,89 @@
+/*
+** Handling missing values 
+** https://www.kaggle.com/alexisbcook/handling-missing-values
+*/
+new;
+
+/*
+** Step One: Load and examine the data
+*/
+/*
+** Perform import
+*/
+building_permits = loadd("D:/development/GitHub/gauss-data-management/data/Building_Permits.csv", "Permit Number + Permit Type + cat(Permit Type Definition) + date($Permit Creation Date) + Block + Lot + Street Number + cat(Street Number Suffix) + str(Street Name) + cat(Street Suffix) + Unit + str(Unit Suffix) + str(Description) + cat(Current Status) + date($Current Status Date) + date($Filed Date) + date($Issued Date) + str(Completed Date) + date($First Construction Document Date) + cat(Structural Notification) + Number of Existing Stories + Number of Proposed Stories + cat(Voluntary Soft_Story Retrofit) + cat(Fire Only Permit) + date($Permit Expiration Date) + Estimated Cost + Revised Cost + str(Existing Use) + Existing Units + str(Proposed Use) + Proposed Units + Plansets + cat(TIDF Compliance) + Existing Construction Type + cat(Existing Construction Type Description) + Proposed Construction Type + cat(Proposed Construction Type Description) + cat(Site Permit) + Supervisor District + cat(Neighborhoods _ Analysis Boundaries) + Zipcode + str(Location) + Record ID");
+
+// Quick glance at data head
+building_permits[1:5, .];
+
+// Let's use dstatmt to get a
+// quick glance at how many missing values 
+// we have and store output
+struct dstatmtOut dOut;
+dOut = dstatmt(building_permits);
+
+// Show missings report
+asDF(dOut.vnames, "Variable")~asDF(dOut.missing, "Missings");
+
+// Show missing as percentage
+percent_miss = 100*dOut.missing./(dOut.missing + dOut.valid);
+
+// Show missings report
+asDf(dOut.vnames, "Variable")~asDF(percent_miss, "Percent Missings");
+
+// Total missings
+print "Total percentage of missing values:"; 
+sumc(dOut.missing)/rows(building_permits);
+
+// Look for bathroom in description
+bath = stringContains(building_permits[., "Description"], "bath");
+
+// Total number of bath reno permits 
+// based on descriptions
+print "Total bath renovations:";
+sumc(bath);
+
+// Find total number of street space
+// permits
+print "Total street space permits:";
+sumc(stringContains(building_permits[., "Description"], "street space"));
+
+plotBox(building_permits, "Estimated Cost ~ Permit Type");
+plotOpenWindow;
+
+// Change variable name
+building_permits = dfname(move(building_permits), "Neighborhood", "Neighborhoods _ Analysis Boundaries");
+
+//Plot by Zipcode
+plotBox(building_permits, "Estimated Cost ~ Permit Type Definition + by(Zipcode)");
+plotOpenWindow;
+
+// Plot by neighborhood -- FULL SAMPLE
+plotBox(building_permits, "Estimated Cost ~ Permit Type Definition + by(Neighborhood)");
+plotOpenWindow;
+
+// Plot by neighborhood - PARTIAL SAMPLE
+plotBox(building_permits[1:10000, .], "Estimated Cost ~ Permit Type Definition + by(Neighborhood)");
+plotOpenWindow;
+
+// Drop the data with NAs in rows
+/*
+** Note that all rows are removed
+*/
+new_bp = packr(building_permits);
+
+/*
+** Let's try removing all 
+** the columns that have missing 
+** values
+*/
+print "Columns before removing missing values:"
+cols(building_permits);
+
+new_bp = (packr(building_permits'))';
+
+print "Columns after removing missing values:"
+cols(new_bp);
+
+proc(1) = stringContains(where, what, ...);
+    retp((strrindx(where, what, ...) .> 0));
+endp;
